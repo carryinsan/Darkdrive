@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DarkDrive - Secure Local Storage</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="login-screen" class="active glass-panel">
+        <div class="login-container">
+            <div class="logo-container">
+                <i class="fa-solid fa-hard-drive"></i>
+                <h1>DarkDrive</h1>
+            </div>
+            <p class="subtitle">Secure Encrypted Vault</p>
+            <div class="auth-forms">
+                <form id="password-form" class="auth-form active">
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="master-password" placeholder="Master Password" required autocomplete="off">
+                    </div>
+                    <div class="security-level-indicator">
+                        <div class="bar" id="pwd-strength-bar"></div>
+                    </div>
+                    <button type="submit" class="btn-primary">Unlock Vault</button>
+                </form>
+                <form id="pin-form" class="auth-form hidden">
+                    <div class="pin-display" id="pin-display">
+                        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+                    </div>
+                    <div class="numpad">
+                        <button type="button" class="num-key" data-val="1">1</button>
+                        <button type="button" class="num-key" data-val="2">2</button>
+                        <button type="button" class="num-key" data-val="3">3</button>
+                        <button type="button" class="num-key" data-val="4">4</button>
+                        <button type="button" class="num-key" data-val="5">5</button>
+                        <button type="button" class="num-key" data-val="6">6</button>
+                        <button type="button" class="num-key" data-val="7">7</button>
+                        <button type="button" class="num-key" data-val="8">8</button>
+                        <button type="button" class="num-key" data-val="9">9</button>
+                        <button type="button" class="num-key action-key" data-val="clear"><i class="fa-solid fa-delete-left"></i></button>
+                        <button type="button" class="num-key" data-val="0">0</button>
+                        <button type="button" class="num-key action-key" data-val="enter"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                </form>
+            </div>
+            <div class="auth-toggles">
+                <button id="toggle-pin-mode" class="text-btn">Use PIN</button>
+                <button id="emergency-wipe-btn" class="text-btn danger"><i class="fa-solid fa-skull"></i> Panic</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+        
+        <aside id="sidebar" class="glass-panel">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-hard-drive"></i>
+                <h2>DarkDrive</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item active" data-view="dashboard">
+                        <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-view="files">
+                        <i class="fa-solid fa-folder-tree"></i> <span>All Files</span>
+                    </li>
+                    <li class="nav-item" data-view="recent">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span>Recent</span>
+                    </li>
+                    <li class="nav-item" data-view="favorites">
+                        <i class="fa-solid fa-star"></i> <span>Favorites</span>
+                    </li>
+                    <li class="nav-item" data-view="secure-vault">
+                        <i class="fa-solid fa-vault"></i> <span>Secret Vault</span>
+                    </li>
+                </ul>
+                
+                <div class="nav-divider"></div>
+                
+                <ul class="nav-list">
+                    <li class="nav-item" data-view="images">
+                        <i class="fa-solid fa-image"></i> <span>Images</span>
+                    </li>
+                    <li class="nav-item" data-view="documents">
+                        <i class="fa-solid fa-file-word"></i> <span>Documents</span>
+                    </li>
+                    <li class="nav-item" data-view="videos">
+                        <i class="fa-solid fa-video"></i> <span>Videos</span>
+                    </li>
+                    <li class="nav-item" data-view="audio">
+                        <i class="fa-solid fa-music"></i> <span>Audio</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="storage-widget">
+                <div class="storage-header">
+                    <span>Storage</span>
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="storage-bar-container">
+                    <div class="storage-bar-fill" id="sidebar-storage-fill"></div>
+                </div>
+                <div class="storage-stats">
+                    <span id="storage-used-text">0 MB</span> / <span id="storage-total-text">5 MB</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="settings-trigger" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
+                <button id="lock-vault-trigger" class="icon-btn danger" title="Lock Vault"><i class="fa-solid fa-lock"></i></button>
+            </div>
+        </aside>
+
+        <main id="workspace">
+            
+            <header id="topbar" class="glass-panel">
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="global-search" placeholder="Search files, folders, or extensions..." autocomplete="off">
+                    <button class="filter-btn" id="advanced-search-btn"><i class="fa-solid fa-sliders"></i></button>
+                </div>
+                
+                <div class="topbar-actions">
+                    <button id="view-toggle-btn" class="icon-btn" title="Toggle Grid/List">
+                        <i class="fa-solid fa-list"></i>
+                    </button>
+                    <button id="upload-btn-main" class="btn-primary">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                    </button>
+                </div>
+            </header>
+
+            <div id="breadcrumb-bar">
+                <ul class="breadcrumbs" id="breadcrumb-list">
+                    <li data-folder="root" class="breadcrumb-item"><i class="fa-solid fa-home"></i> Home</li>
+                </ul>
+                <div class="context-actions hidden" id="bulk-actions">
+                    <span id="selection-count">2 selected</span>
+                    <button class="icon-btn" id="bulk-move"><i class="fa-solid fa-folder-open"></i></button>
+                    <button class="icon-btn" id="bulk-download"><i class="fa-solid fa-download"></i></button>
+                    <button class="icon-btn danger" id="bulk-delete"><i class="fa-solid fa-trash"></i></button>
+                    <button class="icon-btn" id="clear-selection"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div id="content-area">
+                
+                <section id="view-dashboard" class="view-section active">
+                    <div class="dashboard-grid">
+                        <div class="dash-card glass-panel chart-card">
+                            <h3>Storage Usage</h3>
+                            <canvas id="storage-pie-chart"></canvas>
+                        </div>
+                        <div class="dash-card glass-panel stat-card">
+                            <h3>Quick Stats</h3>
+                            <div class="stat-grid">
+                                <div class="stat-item">
+                                    <i class="fa-solid fa-file"></i>
+                                    <span class="stat-num" id="stat-total-files">0</span>
+                                    <span class="stat-label">Total Files</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fa-solid fa-folder"></i>
+                                    <span class="stat-num" id="stat-total-folders">0</span>
+                                    <span class="stat-label">Folders</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span class="stat-num" id="stat-encrypted">100%</span>
+                                    <span class="stat-label">Encrypted</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dash-card glass-panel recent-activity">
+                            <h3>Recent Activity</h3>
+                            <ul id="activity-feed" class="feed-list">
+                                </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-files" class="view-section hidden">
+                    
+                    <div id="dropzone" class="dropzone-area">
+                        <div class="dropzone-content">
+                            <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                            <h2>Drag & Drop files here</h2>
+                            <p>or click to browse from your device</p>
+                            <input type="file" id="file-input-hidden" multiple style="display:none;">
+                        </div>
+                    </div>
+
+                    <div id="file-container" class="file-grid">
+                        </div>
+                    
+                    <div id="empty-state" class="empty-state hidden">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <h3>This folder is empty</h3>
+                        <p>Drag files here to upload</p>
+                    </div>
+                </section>
+                
+                <section id="view-secure-vault" class="view-section hidden">
+                    <div class="vault-auth glass-panel" id="vault-unlock-screen">
+                        <i class="fa-solid fa-user-secret vault-icon"></i>
+                        <h2>Secret Vault</h2>
+                        <p>Enter secondary password to access</p>
+                        <input type="password" id="vault-password" class="secure-input" placeholder="Vault Password">
+                        <button id="unlock-vault-btn" class="btn-primary">Decrypt Layer</button>
+                    </div>
+                    <div id="vault-content" class="hidden">
+                        <div class="vault-header">
+                            <h2><i class="fa-solid fa-user-secret"></i> Deep Storage</h2>
+                            <button class="btn-primary" id="vault-upload-btn">Upload to Vault</button>
+                        </div>
+                        <div id="vault-file-container" class="file-grid"></div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="context-menu" class="glass-panel hidden">
+        <ul class="context-list">
+            <li id="ctx-open"><i class="fa-solid fa-folder-open"></i> Open</li>
+            <li id="ctx-preview"><i class="fa-solid fa-eye"></i> Preview</li>
+            <li id="ctx-rename"><i class="fa-solid fa-pen-to-square"></i> Rename</li>
+            <li id="ctx-duplicate"><i class="fa-solid fa-copy"></i> Duplicate</li>
+            <li id="ctx-move"><i class="fa-solid fa-arrows-up-down-left-right"></i> Move</li>
+            <li id="ctx-favorite"><i class="fa-solid fa-star"></i> Favorite</li>
+            <li id="ctx-download"><i class="fa-solid fa-download"></i> Download</li>
+            <li class="divider"></li>
+            <li id="ctx-delete" class="danger"><i class="fa-solid fa-trash"></i> Delete</li>
+        </ul>
+    </div>
+
+    <div id="overlay" class="overlay hidden"></div>
+
+    <div id="upload-modal" class="modal glass-panel hidden">
+        <div class="modal-header">
+            <h3>Uploading Files</h3>
+            <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div id="upload-queue" class="upload-list">
+                </div>
+        </div>
+    </div>
+
+    <div id="preview-modal" class="modal fullscreen-modal glass-panel hidden">
+        <div class="modal-header">
+            <h3 id="preview-title">File Name.ext</h3>
+            <div class="header-actions">
+                <button id="edit-file-btn" class="icon-btn"><i class="fa-solid fa-pen"></i></button>
+                <button id="download-preview-btn" class="icon-btn"><i class="fa-solid fa-download"></i></button>
+                <button class="close-modal icon-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div class="modal-body" id="preview-content-area">
+            </div>
+        <div class="modal-footer hidden" id="editor-footer">
+            <span id="editor-word-count">0 words</span>
+            <button id="save-edit-btn" class="btn-primary">Save Changes</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal glass-panel hidden">
+        <div class="modal-header">
+            <h3>Settings & Security</h3>
+            <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body settings-layout">
+            <div class="settings-sidebar">
+                <button class="settings-tab active" data-target="set-general">General</button>
+                <button class="settings-tab" data-target="set-security">Security</button>
+                <button class="settings-tab" data-target="set-backup">Backup</button>
+                <button class="settings-tab" data-target="set-developer">Developer</button>
+            </div>
+            <div class="settings-content">
+                <div id="set-general" class="set-pane active">
+                    <h4>Appearance</h4>
+                    <div class="setting-item">
+                        <label>Theme</label>
+                        <select id="theme-selector" class="glass-input">
+                            <option value="dark">Dark Mode</option>
+                            <option value="light">Light Mode</option>
+                            <option value="matrix">Matrix Hacker</option>
+                        </select>
+                    </div>
+                    <h4>Layout</h4>
+                    <div class="setting-item">
+                        <label>Default View</label>
+                        <select id="default-view-selector" class="glass-input">
+                            <option value="grid">Grid View</option>
+                            <option value="list">List View</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="set-security" class="set-pane hidden">
+                    <h4>Vault Security</h4>
+                    <div class="setting-item">
+                        <label>Auto-Lock Timer (Minutes)</label>
+                        <input type="number" id="auto-lock-timer" class="glass-input" value="5" min="1" max="60">
+                    </div>
+                    <div class="setting-item">
+                        <label>Change Master Password</label>
+                        <button id="change-pwd-btn" class="btn-secondary">Update</button>
+                    </div>
+                    <div class="setting-item">
+                        <label>Setup PIN</label>
+                        <button id="setup-pin-btn" class="btn-secondary">Configure</button>
+                    </div>
+                    <div class="setting-item danger-zone">
+                        <label>Panic Mode Wipe</label>
+                        <button id="test-panic-btn" class="btn-danger">Test Panic</button>
+                    </div>
+                </div>
+                <div id="set-backup" class="set-pane hidden">
+                    <h4>Data Management</h4>
+                    <div class="setting-item">
+                        <p>Export entire encrypted LocalStorage payload to a JSON file.</p>
+                        <button id="export-backup-btn" class="btn-primary"><i class="fa-solid fa-download"></i> Export Full Backup</button>
+                    </div>
+                    <div class="setting-item">
+                        <p>Import and overwrite current storage.</p>
+                        <input type="file" id="import-backup-input" style="display:none;">
+                        <button id="import-backup-btn" class="btn-secondary"><i class="fa-solid fa-upload"></i> Import Backup</button>
+                    </div>
+                </div>
+                <div id="set-developer" class="set-pane hidden">
+                    <h4>System Diagnostics</h4>
+                    <div class="setting-item">
+                        <label>Clear Thumbnail Cache</label>
+                        <button id="clear-cache-btn" class="btn-secondary">Clear</button>
+                    </div>
+                    <div class="setting-item danger-zone">
+                        <label>Factory Reset</label>
+                        <button id="factory-reset-btn" class="btn-danger">Wipe Everything</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="new-folder-modal" class="modal glass-panel hidden">
+        <div class="modal-header">
+            <h3>Create New Folder</h3>
+            <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="new-folder-name" class="glass-input w-100" placeholder="Folder Name" autocomplete="off">
+            <div class="color-picker-container mt-15">
+                <label>Folder Color:</label>
+                <div class="color-options" id="folder-color-options">
+                    <div class="color-dot active" data-color="#3498db" style="background:#3498db;"></div>
+                    <div class="color-dot" data-color="#e74c3c" style="background:#e74c3c;"></div>
+                    <div class="color-dot" data-color="#2ecc71" style="background:#2ecc71;"></div>
+                    <div class="color-dot" data-color="#f1c40f" style="background:#f1c40f;"></div>
+                    <div class="color-dot" data-color="#9b59b6" style="background:#9b59b6;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="create-folder-btn" class="btn-primary w-100">Create</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    
+    <script src="security.js"></script>
+    <script src="storage.js"></script>
+    <script src="backup.js"></script>
+    <script src="search.js"></script>
+    <script src="editor.js"></script>
+    <script src="ui.js"></script>
+    <script src="settings.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
